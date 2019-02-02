@@ -57,27 +57,7 @@ public class MyHome extends AppCompatActivity {
         ActiveWiFiConnect = (TextView) findViewById(R.id.activeWiFi);
 
         ConnectivityManager connectivityManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-        Object context = getApplicationContext();
-        WifiManager wifiManager = (WifiManager) ((Context) context).getSystemService(WIFI_SERVICE);
-        List<WifiConfiguration> configuredNetworks = wifiManager.getConfiguredNetworks();
 
-        ListWiFi = new ArrayList<>();
-
-        for( int count = 0 ; count < configuredNetworks.size() ; count++ ) {
-            String input = configuredNetworks.get(count).SSID.toString();
-            ListWiFi.add(input);
-        }
-
-        final StableArrayAdapter adapter = new StableArrayAdapter(this,android.R.layout.simple_list_item_1, ListWiFi);
-
-        WiFiList.setAdapter(adapter);
-
-        WiFiList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                ActiveWiFiConnect.setText(ListWiFi.get(i));
-            }
-        });
 
 
         NetworkInfo netInfo = connectivityManager.getActiveNetworkInfo();
@@ -85,6 +65,28 @@ public class MyHome extends AppCompatActivity {
         if(result == ConnectivityManager.TYPE_WIFI) {
             String ExtraInfo = netInfo.getExtraInfo();
             ActiveWiFiConnect.setText(ExtraInfo.toString());
+
+            Object context = getApplicationContext();
+            WifiManager wifiManager = (WifiManager) ((Context) context).getSystemService(WIFI_SERVICE);
+            List<WifiConfiguration> configuredNetworks = wifiManager.getConfiguredNetworks();
+
+            ListWiFi = new ArrayList<>();
+
+            for( int count = 0 ; count < configuredNetworks.size() ; count++ ) {
+                String input = configuredNetworks.get(count).SSID.toString();
+                ListWiFi.add(input);
+            }
+
+            final StableArrayAdapter adapter = new StableArrayAdapter(this,android.R.layout.simple_list_item_1, ListWiFi);
+
+            WiFiList.setAdapter(adapter);
+
+            WiFiList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                @Override
+                public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                    ActiveWiFiConnect.setText(ListWiFi.get(i));
+                }
+            });
         }
         else
         {
