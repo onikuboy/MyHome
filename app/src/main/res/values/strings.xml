@@ -1,3 +1,9 @@
 <resources>
     <string name="app_name">MyHome</string>
+    <string name="select">Please select the WiFi Network</string>
+    <string name="Active">Active WiFi Network</string>
+    <string name="selectButton">Select</string>
+    <string name="speakButton">Speak</string>
+    <string name="commandTextView">Pending Command</string>
+    <string name="waitingTextView">...Waiting...</string>
 </resources>
