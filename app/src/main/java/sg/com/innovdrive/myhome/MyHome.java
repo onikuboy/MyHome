@@ -5,10 +5,15 @@ import android.content.Intent;
 import android.database.DataSetObserver;
 import android.net.NetworkInfo;
 import android.net.wifi.WifiConfiguration;
+import android.os.AsyncTask;
+import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.speech.RecognizerIntent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
@@ -19,7 +24,22 @@ import android.widget.Toast;
 import android.widget.Adapter;
 import android.widget.AdapterView;
 
+import java.io.BufferedOutputStream;
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
 import java.lang.reflect.Array;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
+import java.net.MalformedURLException;
+import java.net.PortUnreachableException;
+import java.net.Socket;
+import java.net.SocketException;
+import java.net.UnknownHostException;
+import java.nio.channels.IllegalBlockingModeException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -27,6 +47,8 @@ import java.util.Locale;
 import java.net.URL;
 import java.net.HttpURLConnection;
 import java.net.URLConnection;
+import java.net.DatagramSocket;
+import java.net.DatagramPacket;
 import java.io.InputStream;
 import java.io.BufferedInputStream;
 import android.net.wifi.WifiManager;
@@ -34,16 +56,30 @@ import android.content.Context;
 import android.net.ConnectivityManager;
 import java.util.HashMap;
 import org.w3c.dom.Text;
-
+import java.lang.String;
+import java.io.OutputStream;
+import java.io.ByteArrayOutputStream;
+import 	java.io.BufferedReader;
 
 public class MyHome extends AppCompatActivity {
 
+    private static final String TAG = "MyHome";
     private TextView Speech2Text;
     private TextView TextKeyWords;
-    private TextView URLReadBack;
+    private TextView ReadResponse;
     private ListView WiFiList;
     private TextView ActiveWiFiConnect;
     private ArrayList<String> ListWiFi;
+
+    Boolean KeyWordsUpdated = false;
+
+    Handler UIHandler;
+    Thread Thread1 = null;
+    Thread Thread3 = null;
+
+
+    public static final int ServerPortNumner = 80;
+    public static final String  ServerIP = "192.168.1.39";
 
     @SuppressLint("ResourceType")
     @Override
@@ -52,12 +88,13 @@ public class MyHome extends AppCompatActivity {
         setContentView(R.layout.activity_my_home);
         Speech2Text = (TextView) findViewById(R.id.SpeechTextOutput);
         TextKeyWords = (TextView) findViewById(R.id.KeyWords);
-        URLReadBack = (TextView) findViewById(R.id.URLResponse);
+        ReadResponse = (TextView) findViewById(R.id.getResponse);
         WiFiList = (ListView) findViewById(R.id.configuredWiFiList);
         ActiveWiFiConnect = (TextView) findViewById(R.id.activeWiFi);
 
         ConnectivityManager connectivityManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
 
+        UIHandler = new Handler();
 
 
         NetworkInfo netInfo = connectivityManager.getActiveNetworkInfo();
@@ -92,8 +129,209 @@ public class MyHome extends AppCompatActivity {
         {
             ActiveWiFiConnect.setText("WiFi Not Connected");
         }
+/*
+        this.Thread1 = new Thread(new Thread1());
+        this.Thread1.start();
+        this.Thread3 = new Thread(new Thread3());
+        this.Thread3.start();
+*/
+    }
+
+    class Thread1 implements Runnable{
+
+        @Override
+        public void run() {
+            Socket socket = null;
+
+            try{
+                InetAddress ServerAddress = InetAddress.getByName(ServerIP);
+                socket = new Socket(ServerAddress,ServerPortNumner);
+
+                Thread2 commThread = new Thread2(socket);
+                new Thread(commThread).start();
+                return;
+            } catch (IOException e){
+                e.printStackTrace();
+            }
+        }
+    }
+
+    class Thread2 implements Runnable{
+
+        private Socket ClientSocket;
+        private BufferedReader input;
+        private BufferedOutputStream output;
 
 
+        public Thread2(Socket ClientSocket){
+            this.ClientSocket = ClientSocket;
+            try{
+                this.input = new BufferedReader(new InputStreamReader(this.ClientSocket.getInputStream()));
+
+            } catch (IOException e){
+                e.printStackTrace();
+            }
+        }
+
+        @Override
+        public void run() {
+            while(!Thread.currentThread().isInterrupted()){
+                try{
+                    String read = input.readLine();
+                    if(read != null){
+                        UIHandler.post(new updateUIThread(read));
+                    }
+                    else {
+                        Thread1 = new Thread(new Thread1());
+                        Thread1.start();
+                        return;
+                    }
+                }catch (IOException e){
+                    e.printStackTrace();
+
+                }
+            }
+        }
+    }
+
+    class Thread3 implements Runnable{
+
+        @Override
+        public void run() {
+            Socket socket = null;
+
+            try{
+                InetAddress ServerAddress = InetAddress.getByName(ServerIP);
+                socket = new Socket(ServerAddress,ServerPortNumner);
+
+                Thread4 sendThread = new Thread4(socket);
+                new Thread(sendThread).start();
+                return;
+            } catch (IOException e){
+                e.printStackTrace();
+            }
+        }
+    }
+
+    class Thread4 implements Runnable{
+
+        private Socket ClientSocket;
+
+        public Thread4(Socket ClientSocket){
+            this.ClientSocket = ClientSocket;
+            try {
+                String str = "GET / HTTP/1.0\\r\\n\\r\\n" ;
+                PrintWriter out = new PrintWriter(new BufferedWriter(
+                        new OutputStreamWriter(ClientSocket.getOutputStream())),
+                        true);
+                if(KeyWordsUpdated == true){
+                    out.println(str);
+                    out.flush();
+                    KeyWordsUpdated = false;
+                }
+                else
+                    out.close();
+
+
+            } catch (UnknownHostException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+        @Override
+        public void run() {
+            while(!Thread.currentThread().isInterrupted()) {
+
+                    Thread3 = new Thread(new Thread3());
+                    Thread3.start();
+                    return;
+
+                }
+            }
+    }
+
+    private class sendTCPData extends AsyncTask<Void, Void, Void>{
+
+        @Override
+        protected Void doInBackground(Void... voids) {
+
+            Socket socket = null;
+
+            try{
+                InetAddress ServerAddress = InetAddress.getByName(ServerIP);
+                socket = new Socket(ServerAddress,ServerPortNumner);
+
+                Log.i(TAG, "Port Number is" + String.valueOf(socket.getLocalPort()));
+
+                String str = "GET / HTTP/1.0\\r\\n\\r\\n" ;
+                PrintWriter out = new PrintWriter(new BufferedWriter(
+                        new OutputStreamWriter(socket.getOutputStream())),
+                        true);
+//                if(KeyWordsUpdated == true){
+                    out.println(str);
+                    out.flush();
+//                    KeyWordsUpdated = false;
+//                }
+//                else
+                    out.close();
+                    socket.close();
+
+                    while(socket.isClosed() == false);
+
+                    Log.i(TAG,"Socket and Output Closed");
+
+            } catch (IOException e){
+                e.printStackTrace();
+            }
+            return null;
+        }
+    }
+
+    class KeyWordsTextChanged implements TextWatcher{
+        private Context mContext;
+        private TextView mTextview;
+
+        public KeyWordsTextChanged(Context context, TextView edittextview) {
+            super();
+            this.mContext = context;
+            this.mTextview = edittextview;
+
+        }
+        @Override
+        public void afterTextChanged(Editable arg0) {
+            // TODO Auto-generated method stub
+
+        }
+
+        @Override
+        public void beforeTextChanged(CharSequence arg0, int arg1, int arg2,
+                                      int arg3) {
+            // TODO Auto-generated method stub
+
+        }
+
+        @Override
+        public void onTextChanged(CharSequence arg0, int arg1, int arg2, int arg3) {
+            // TODO Auto-generated method stub
+
+        }
+    }
+
+    class updateUIThread implements Runnable{
+        private String msg;
+
+        public updateUIThread(String str){
+            this.msg = str;
+        }
+
+        @Override
+        public void run() {
+            ReadResponse.setText(msg);
+        }
     }
 
     private class StableArrayAdapter extends ArrayAdapter<String> {
@@ -136,8 +374,6 @@ public class MyHome extends AppCompatActivity {
 
     }
 
-
-
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -164,14 +400,18 @@ public class MyHome extends AppCompatActivity {
                         if(TextOut.contentEquals("lights on") || TextOut.contentEquals("lights off") )
                         {
                             TextKeyWords.setText(TextOut);
+                            //SendBroadcast(TextOut);
+                            KeyWordsUpdated = true;
 
-
+                            sendTCPData TCPData = new sendTCPData();
+                            TCPData.execute();
                         }
                     }
                     break;
 
         }
     }
+
 
 
 }

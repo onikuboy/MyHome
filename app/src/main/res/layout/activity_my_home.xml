@@ -47,7 +47,7 @@
         app:layout_constraintVertical_bias="0.806" />
 
     <TextView
-        android:id="@+id/URLResponse"
+        android:id="@+id/getResponse"
         android:layout_width="395dp"
         android:layout_height="43dp"
         android:layout_marginStart="8dp"
