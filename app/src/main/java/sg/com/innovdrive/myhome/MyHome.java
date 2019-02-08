@@ -2,64 +2,36 @@ package sg.com.innovdrive.myhome;
 
 import android.annotation.SuppressLint;
 import android.content.Intent;
-import android.database.DataSetObserver;
 import android.net.NetworkInfo;
 import android.net.wifi.WifiConfiguration;
 import android.os.AsyncTask;
-import android.os.Handler;
-import android.preference.PreferenceManager;
 import android.speech.RecognizerIntent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.text.Editable;
-import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
-import android.widget.ListAdapter;
+import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
-import android.widget.Adapter;
 import android.widget.AdapterView;
 
-import java.io.BufferedOutputStream;
 import java.io.BufferedWriter;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
-import java.lang.reflect.Array;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
 import java.net.InetAddress;
-import java.net.MalformedURLException;
-import java.net.PortUnreachableException;
 import java.net.Socket;
-import java.net.SocketException;
-import java.net.UnknownHostException;
-import java.nio.channels.IllegalBlockingModeException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
-import java.net.URL;
-import java.net.HttpURLConnection;
-import java.net.URLConnection;
-import java.net.DatagramSocket;
-import java.net.DatagramPacket;
-import java.io.InputStream;
-import java.io.BufferedInputStream;
+
 import android.net.wifi.WifiManager;
 import android.content.Context;
 import android.net.ConnectivityManager;
 import java.util.HashMap;
-import org.w3c.dom.Text;
 import java.lang.String;
-import java.io.OutputStream;
-import java.io.ByteArrayOutputStream;
-import 	java.io.BufferedReader;
 
 public class MyHome extends AppCompatActivity {
 
@@ -70,16 +42,15 @@ public class MyHome extends AppCompatActivity {
     private ListView WiFiList;
     private TextView ActiveWiFiConnect;
     private ArrayList<String> ListWiFi;
+    private EditText IP3124;
+    private EditText IP2316;
+    private EditText IP1508;
+    private EditText IP0700;
+    private EditText SelectedPortNumber;
 
-    Boolean KeyWordsUpdated = false;
-
-    Handler UIHandler;
-    Thread Thread1 = null;
-    Thread Thread3 = null;
-
-
-    public static final int ServerPortNumner = 80;
-    public static final String  ServerIP = "192.168.1.39";
+    private int ServerPortNumner = 80;
+    private String  ServerIP = "192.168.1.39";
+    private sendTCPData TCPData;
 
     @SuppressLint("ResourceType")
     @Override
@@ -88,13 +59,18 @@ public class MyHome extends AppCompatActivity {
         setContentView(R.layout.activity_my_home);
         Speech2Text = (TextView) findViewById(R.id.SpeechTextOutput);
         TextKeyWords = (TextView) findViewById(R.id.KeyWords);
-        ReadResponse = (TextView) findViewById(R.id.getResponse);
         WiFiList = (ListView) findViewById(R.id.configuredWiFiList);
         ActiveWiFiConnect = (TextView) findViewById(R.id.activeWiFi);
+        IP3124 = (EditText) findViewById(R.id.editIP3124);
+        IP2316 = (EditText) findViewById(R.id.editIP2316);
+        IP1508 = (EditText) findViewById(R.id.editIP1508);
+        IP0700 = (EditText) findViewById(R.id.editIP0700);
+        SelectedPortNumber = (EditText) findViewById(R.id.editIPort);
+
+
+        final ArrayList<Integer> selectedSSID = new ArrayList<>();
 
         ConnectivityManager connectivityManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-
-        UIHandler = new Handler();
 
 
         NetworkInfo netInfo = connectivityManager.getActiveNetworkInfo();
@@ -104,13 +80,15 @@ public class MyHome extends AppCompatActivity {
             ActiveWiFiConnect.setText(ExtraInfo.toString());
 
             Object context = getApplicationContext();
-            WifiManager wifiManager = (WifiManager) ((Context) context).getSystemService(WIFI_SERVICE);
+            final WifiManager wifiManager = (WifiManager) ((Context) context).getSystemService(WIFI_SERVICE);
             List<WifiConfiguration> configuredNetworks = wifiManager.getConfiguredNetworks();
 
             ListWiFi = new ArrayList<>();
 
             for( int count = 0 ; count < configuredNetworks.size() ; count++ ) {
                 String input = configuredNetworks.get(count).SSID.toString();
+                int numberSSID = configuredNetworks.get(count).networkId;
+                selectedSSID.add(numberSSID);
                 ListWiFi.add(input);
             }
 
@@ -122,6 +100,12 @@ public class MyHome extends AppCompatActivity {
                 @Override
                 public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
                     ActiveWiFiConnect.setText(ListWiFi.get(i));
+
+                    changeWifiSSID ChangeWiifNetwork = new changeWifiSSID();
+                    TypesParameters parameters = new TypesParameters(wifiManager,selectedSSID.get(i));
+                    ChangeWiifNetwork.execute(parameters);
+
+
                 }
             });
         }
@@ -129,129 +113,37 @@ public class MyHome extends AppCompatActivity {
         {
             ActiveWiFiConnect.setText("WiFi Not Connected");
         }
-/*
-        this.Thread1 = new Thread(new Thread1());
-        this.Thread1.start();
-        this.Thread3 = new Thread(new Thread3());
-        this.Thread3.start();
-*/
     }
 
-    class Thread1 implements Runnable{
+    private static class TypesParameters{
+        WifiManager wifiManager;
+        int SSID;
 
-        @Override
-        public void run() {
-            Socket socket = null;
+        TypesParameters(WifiManager wifiManager, int SSID){
 
-            try{
-                InetAddress ServerAddress = InetAddress.getByName(ServerIP);
-                socket = new Socket(ServerAddress,ServerPortNumner);
-
-                Thread2 commThread = new Thread2(socket);
-                new Thread(commThread).start();
-                return;
-            } catch (IOException e){
-                e.printStackTrace();
-            }
+            this.wifiManager = wifiManager;
+            this.SSID = SSID;
         }
+
+
     }
 
-    class Thread2 implements Runnable{
+    private class changeWifiSSID extends AsyncTask<TypesParameters, Void, Void>{
 
-        private Socket ClientSocket;
-        private BufferedReader input;
-        private BufferedOutputStream output;
-
-
-        public Thread2(Socket ClientSocket){
-            this.ClientSocket = ClientSocket;
-            try{
-                this.input = new BufferedReader(new InputStreamReader(this.ClientSocket.getInputStream()));
-
-            } catch (IOException e){
-                e.printStackTrace();
-            }
-        }
 
         @Override
-        public void run() {
-            while(!Thread.currentThread().isInterrupted()){
-                try{
-                    String read = input.readLine();
-                    if(read != null){
-                        UIHandler.post(new updateUIThread(read));
-                    }
-                    else {
-                        Thread1 = new Thread(new Thread1());
-                        Thread1.start();
-                        return;
-                    }
-                }catch (IOException e){
-                    e.printStackTrace();
+        protected Void doInBackground(TypesParameters... typesParameters) {
 
-                }
-            }
+            WifiManager WIFIManager = typesParameters[0].wifiManager;
+            int SSID = typesParameters[0].SSID;
+
+
+            WIFIManager.disconnect();
+
+            WIFIManager.enableNetwork(SSID,true);
+
+            return null;
         }
-    }
-
-    class Thread3 implements Runnable{
-
-        @Override
-        public void run() {
-            Socket socket = null;
-
-            try{
-                InetAddress ServerAddress = InetAddress.getByName(ServerIP);
-                socket = new Socket(ServerAddress,ServerPortNumner);
-
-                Thread4 sendThread = new Thread4(socket);
-                new Thread(sendThread).start();
-                return;
-            } catch (IOException e){
-                e.printStackTrace();
-            }
-        }
-    }
-
-    class Thread4 implements Runnable{
-
-        private Socket ClientSocket;
-
-        public Thread4(Socket ClientSocket){
-            this.ClientSocket = ClientSocket;
-            try {
-                String str = "GET / HTTP/1.0\\r\\n\\r\\n" ;
-                PrintWriter out = new PrintWriter(new BufferedWriter(
-                        new OutputStreamWriter(ClientSocket.getOutputStream())),
-                        true);
-                if(KeyWordsUpdated == true){
-                    out.println(str);
-                    out.flush();
-                    KeyWordsUpdated = false;
-                }
-                else
-                    out.close();
-
-
-            } catch (UnknownHostException e) {
-                e.printStackTrace();
-            } catch (IOException e) {
-                e.printStackTrace();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-
-        @Override
-        public void run() {
-            while(!Thread.currentThread().isInterrupted()) {
-
-                    Thread3 = new Thread(new Thread3());
-                    Thread3.start();
-                    return;
-
-                }
-            }
     }
 
     private class sendTCPData extends AsyncTask<Void, Void, Void>{
@@ -291,49 +183,6 @@ public class MyHome extends AppCompatActivity {
         }
     }
 
-    class KeyWordsTextChanged implements TextWatcher{
-        private Context mContext;
-        private TextView mTextview;
-
-        public KeyWordsTextChanged(Context context, TextView edittextview) {
-            super();
-            this.mContext = context;
-            this.mTextview = edittextview;
-
-        }
-        @Override
-        public void afterTextChanged(Editable arg0) {
-            // TODO Auto-generated method stub
-
-        }
-
-        @Override
-        public void beforeTextChanged(CharSequence arg0, int arg1, int arg2,
-                                      int arg3) {
-            // TODO Auto-generated method stub
-
-        }
-
-        @Override
-        public void onTextChanged(CharSequence arg0, int arg1, int arg2, int arg3) {
-            // TODO Auto-generated method stub
-
-        }
-    }
-
-    class updateUIThread implements Runnable{
-        private String msg;
-
-        public updateUIThread(String str){
-            this.msg = str;
-        }
-
-        @Override
-        public void run() {
-            ReadResponse.setText(msg);
-        }
-    }
-
     private class StableArrayAdapter extends ArrayAdapter<String> {
 
         HashMap<String, Integer> mIdMap = new HashMap<String, Integer>();
@@ -356,6 +205,23 @@ public class MyHome extends AppCompatActivity {
         public boolean hasStableIds() {
             return true;
         }
+
+    }
+
+    public void setIPAddress(View view) {
+
+        ServerIP = "";
+        ServerIP = IP3124.getText().toString();
+        ServerIP += ".";
+        ServerIP += IP2316.getText().toString();
+        ServerIP += ".";
+        ServerIP += IP1508.getText().toString();
+        ServerIP += ".";
+        ServerIP += IP0700.getText().toString();
+
+        ServerPortNumner = Integer.parseInt(SelectedPortNumber.getText().toString());
+
+        TCPData = new sendTCPData();
 
     }
 
@@ -400,10 +266,6 @@ public class MyHome extends AppCompatActivity {
                         if(TextOut.contentEquals("lights on") || TextOut.contentEquals("lights off") )
                         {
                             TextKeyWords.setText(TextOut);
-                            //SendBroadcast(TextOut);
-                            KeyWordsUpdated = true;
-
-                            sendTCPData TCPData = new sendTCPData();
                             TCPData.execute();
                         }
                     }

@@ -64,7 +64,6 @@
         android:id="@+id/selectIPAddress"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:onClick="setIPAddress"
         android:text="@string/selectButton"
         app:layout_constraintBottom_toTopOf="@+id/SpeechOutput"
         app:layout_constraintEnd_toEndOf="parent"
@@ -116,16 +115,6 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
-        android:id="@+id/comment8"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="240dp"
-        android:layout_marginEnd="252dp"
-        android:text="@string/enter_light_ip_address"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <TextView
         android:id="@+id/comment7"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -171,15 +160,13 @@
         android:layout_height="53dp"
         android:layout_marginTop="259dp"
         android:layout_marginEnd="323dp"
-        android:autofillHints=""
         android:ems="10"
         android:hint="@string/_192"
         android:inputType="numberDecimal"
-        android:maxLength="3"
         android:textAlignment="center"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        tools:targetApi="o" />
+        android:autofillHints="" />
 
     <EditText
         android:id="@+id/editIP2316"
@@ -187,15 +174,13 @@
         android:layout_height="53dp"
         android:layout_marginTop="259dp"
         android:layout_marginEnd="270dp"
-        android:autofillHints=""
         android:ems="10"
         android:hint="@string/_168"
         android:inputType="numberDecimal"
-        android:maxLength="3"
         android:textAlignment="center"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        tools:targetApi="o" />
+        android:importantForAutofill="no" />
 
     <EditText
         android:id="@+id/editIP1508"
@@ -203,15 +188,13 @@
         android:layout_height="53dp"
         android:layout_marginTop="259dp"
         android:layout_marginEnd="217dp"
-        android:autofillHints=""
         android:ems="10"
         android:hint="@string/_1"
         android:inputType="numberDecimal"
-        android:maxLength="3"
         android:textAlignment="center"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        tools:targetApi="o" />
+        android:importantForAutofill="no" />
 
     <EditText
         android:id="@+id/editIP0700"
@@ -219,16 +202,13 @@
         android:layout_height="53dp"
         android:layout_marginTop="259dp"
         android:layout_marginEnd="162dp"
-        android:autofillHints=""
         android:ems="10"
         android:hint="@string/_1"
         android:inputType="numberDecimal"
-        android:maxLength="3"
         android:textAlignment="center"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        tools:targetApi="o" />
-
+        android:importantForAutofill="no" />
 
     <EditText
         android:id="@+id/editIPort"
@@ -236,14 +216,12 @@
         android:layout_height="53dp"
         android:layout_marginTop="259dp"
         android:layout_marginEnd="75dp"
-        android:autofillHints=""
         android:ems="10"
         android:hint="@string/_80"
         android:inputType="numberDecimal"
-        android:maxLength="4"
         android:textAlignment="center"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        tools:targetApi="o" />
+        android:importantForAutofill="no" />
 
 </android.support.constraint.ConstraintLayout>

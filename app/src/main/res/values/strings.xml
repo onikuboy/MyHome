@@ -6,4 +6,13 @@
     <string name="speakButton">Speak</string>
     <string name="commandTextView">Pending Command</string>
     <string name="waitingTextView">...Waiting...</string>
+    <string name="ip">IP :</string>
+    <string name="_192">192</string>
+    <string name="_168">168</string>
+    <string name="_1">1</string>
+    <string name="_80">80</string>
+    <string name="port">Port :</string>
+    <string name="dot">.</string>
+    <string name="enter_light_ip_address">Enter Light IP Address</string>
+
 </resources>
