@@ -146,12 +146,13 @@ public class MyHome extends AppCompatActivity {
         }
     }
 
-    private class sendTCPData extends AsyncTask<Void, Void, Void>{
+    private class sendTCPData extends AsyncTask<String, Void, Void>{
 
         @Override
-        protected Void doInBackground(Void... voids) {
+        protected Void doInBackground(String... input) {
 
             Socket socket = null;
+            String str = "";
 
             try{
                 InetAddress ServerAddress = InetAddress.getByName(ServerIP);
@@ -159,16 +160,17 @@ public class MyHome extends AppCompatActivity {
 
                 Log.i(TAG, "Port Number is" + String.valueOf(socket.getLocalPort()));
 
-                String str = "GET / HTTP/1.0\\r\\n\\r\\n" ;
+                if(input[0].equals("high"))
+                    str = "GET /H HTTP/1.0\\r\\n\\r\\n" ;
+
+                if(input[0].equals("low"))
+                    str = "GET /L HTTP/1.0\\r\\n\\r\\n" ;
+
                 PrintWriter out = new PrintWriter(new BufferedWriter(
                         new OutputStreamWriter(socket.getOutputStream())),
                         true);
-//                if(KeyWordsUpdated == true){
                     out.println(str);
                     out.flush();
-//                    KeyWordsUpdated = false;
-//                }
-//                else
                     out.close();
                     socket.close();
 
@@ -221,7 +223,6 @@ public class MyHome extends AppCompatActivity {
 
         ServerPortNumner = Integer.parseInt(SelectedPortNumber.getText().toString());
 
-        TCPData = new sendTCPData();
 
     }
 
@@ -263,11 +264,23 @@ public class MyHome extends AppCompatActivity {
                         if (result.get(0).contains("Off") || result.get(0).contains("off"))
                             TextOut += "off";
 
-                        if(TextOut.contentEquals("lights on") || TextOut.contentEquals("lights off") )
+                        if(TextOut.contentEquals("lights on"))
                         {
                             TextKeyWords.setText(TextOut);
-                            TCPData.execute();
+                            TCPData = new sendTCPData();
+                            String output = "high";
+                            TCPData.execute(output);
                         }
+
+                        if(TextOut.contentEquals("lights off"))
+                        {
+                            TextKeyWords.setText(TextOut);
+                            TCPData = new sendTCPData();
+                            String output = "low";
+                            TCPData.execute(output);
+                        }
+
+
                     }
                     break;
 
